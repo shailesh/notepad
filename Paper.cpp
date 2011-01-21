@@ -21,6 +21,7 @@ Paper& Paper::operator=(const Paper& source)
 	this->linkedList = source.linkedList;
 	this->length = source.length;
 	this->current = 0;
+
 	return *this;
 }
 
@@ -33,36 +34,37 @@ Label* Paper::Attach(Label label)
 {
 	LinkedList<Label>::Node* node = this->linkedList.GetCurrent();
 
-	if(node == 0) {
+	if(node == 0) 
+	{
 		node = this->linkedList.AppendFromHead(label);
-	} else {
+	}
+	else 
+	{
 		node = this->linkedList.InsertAfter(node, label);
 	}
-	this->length++;
+
 	this->current = &(node->GetObject());
+	this->length++;
 
 	return this->current;
 }
 
 Label Paper::Detach()
 {
-	LinkedList<Label>::Node* node = this->linkedList.LinearSearchUnique(this->current, CompareLabel);
-	Label label = node->GetObject();
-		
-	LinkedList<Label>::Node* previous = this->linkedList.Previous();
+	Label label = *(this->current);
 
-	if(previous != node)
+	LinkedList<Label>::Node* node = this->linkedList.Delete();
+
+	if(node != 0)
 	{
-		this->current = &(previous->GetObject());
+		this->current = &(node->GetObject());
 	}
 	else 
 	{
 		this->current = 0;
 	}
-	
-	this->linkedList.Delete(node);
-	this->length--;
-	
+
+	this->length--;	
 	
 	return label;
 }
@@ -70,10 +72,12 @@ Label Paper::Detach()
 int CompareLabel(void* one, void* other)
 {
 	int ret = -1;
+
 	if(one == other)
 	{
 		ret = 0;
 	}
+
 	return ret;
 }
 
