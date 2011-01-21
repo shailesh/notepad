@@ -20,7 +20,7 @@ public:
 	int column;
 
 	int m_cxChar;                // Average character width
-    int m_cyChar;                // Character height
+	int m_cyChar;                // Character height
 	int m_nTextPos;              // Index of current character in text box
 	CPoint m_ptTextOrigin;       // Origin for drawing input text
 	CPoint m_ptCaretPos;         // Current caret position
