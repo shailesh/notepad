@@ -230,40 +230,39 @@ int String::Delete(int index, int count)
 
 char* String::Mid(int first, int count) 
 {
-	char* temp = 0;
-	if(count > 0) 
+	char (*buffer) = new char[count+1];
+
+	for(int i = 0; i < count; i++) 
 	{
-		temp = new char[count];
-		for(int i = 0; i < count; i++) 
-		{
-			temp[i] = this->front[first+i];
-		}
+		buffer[i] = this->front[first+i];
 	}
-	return temp;
+	buffer[count] = '\0';
+
+	return buffer;
 }
 
 char* String::Left(int count) 
 {
-	char* temp = new char[count];
-	
+	char (*buffer) = new char[count+1];
+
 	for(int i = 0; i < count; i++) 
 	{
-		temp[i] = this->front[i];
+		buffer[i] = this->front[i];
 	}
-	
-	return temp;
+	buffer[count] = '\0';
+
+	return buffer;
 }
 
 char* String::Right(int count) 
 {
-	char* temp = 0;
-	if(count > 0) 
+	char (*buffer) = new char[count+1];
+
+	for(int i = 0; i < count; i++) 
 	{
-		temp = new char[count];
-		for(int i = 0; i < count; i++) 
-		{
-			temp[i] = this->front[this->length-count+i];
-		}
+		buffer[i] = this->front[this->length-count+i];
 	}
-	return temp;
+	buffer[count] = '\0';
+
+	return buffer;
 }
