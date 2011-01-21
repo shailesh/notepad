@@ -89,6 +89,7 @@ public:
 	Node* InsertAfter(Node* index, T object);
 	Node* DeleteFromHead();
 	Node* DeleteFromTail();
+	Node* Delete();
 	Node* Delete(Node* index);
 	Node* LinearSearchUnique(void* key, int (*compare)(void*, void*));
 	void LinearSearchDuplicate(void* key, Node** (*indexes), int* count, int (*compare)(void*, void*));
@@ -349,6 +350,49 @@ LinkedList<T>::Node* LinkedList<T>::DeleteFromTail()
 	{
 		delete this->current;
 		this->current = 0;
+	}
+
+	this->length--;
+
+	return this->current;
+}
+
+template <typename T>
+LinkedList<T>::Node* LinkedList<T>::Delete() 
+{
+	Node* index = this->current;
+
+	if(this->length > 1) 
+	{
+		if(index == this->head) 
+		{
+			index->next->previous = index->next;
+			this->head = index->next;
+			this->current = 0;
+		} 
+		else if(index == this->tail) 
+		{
+			index->previous->next = index->previous;
+			this->tail = index->previous;
+			this->current = this->tail;
+		} 
+		else
+		{
+			index->next->previous = index->previous;
+			index->previous->next = index->next;
+			this->current = this->current->previous;
+		}
+	} 
+	else 
+	{
+		this->head = 0;
+		this->tail = 0;
+		this->current = 0;
+	}
+	
+	if(index != 0) 
+	{
+		delete index;
 	}
 
 	this->length--;
