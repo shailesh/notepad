@@ -161,20 +161,6 @@ LinkedList<T>::~LinkedList()
 }
 
 template <typename T>
-T& LinkedList<T>::GetAt(int index) 
-{
-	this->current = this->head;
-	int i = 0;
-
-	while(i < index && i < this->length) 
-	{
-		this->current = this->current->next;
-		i++;
-	}
-	return this->current->object;
-}
-
-template <typename T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList& source) 
 {
 	this->current = this->head;
@@ -214,6 +200,21 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList& source)
 	this->length = source.length;
 
 	return *this;
+}
+
+template <typename T>
+T& LinkedList<T>::GetAt(int index) 
+{
+	Node* current = this->head;
+	int i = 0;
+
+	while(i < index && i < this->length) 
+	{
+		current = current->next;
+		i++;
+	}
+
+	return current->object;
 }
 
 template <typename T>
