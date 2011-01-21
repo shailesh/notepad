@@ -125,14 +125,15 @@ int Label::Move(int index)
 	return this->current;
 }
 
-void Label::Copy(char* (*buffer))
+char* Label::Copy()
 {
-	(*buffer) = new char[this->length];
+	char (*buffer) = new char[this->length+1];
 
-	for(int i = 0; i < this->length; i++)
+	for(int i = 0; i <= this->length; i++)
 	{
-		(*buffer)[i] = this->str[i];
+		buffer[i] = this->str[i];
 	}
+	return buffer;
 }
 
 char* Label::Copy(int first, int count) 
