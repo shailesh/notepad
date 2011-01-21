@@ -1,4 +1,4 @@
-ï»¿// MainFrm.cpp
+// MainFrm.cpp
 
 #include "MainFrm.h"
 #include "Paper.h"
@@ -60,35 +60,35 @@ void CMainFrame::OnClose()
 
 void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	// 1. ë¬¸ì(ìˆ«ì, spacebar)í‚¤ë¥¼ ëˆ„ë¥´ë©´
+	// 1. ¹®ÀÚ(¼ıÀÚ, spacebar)Å°¸¦ ´©¸£¸é
 	if((nChar>='0' && nChar<='9') || (nChar>='A' && nChar<='z') || nChar == VK_SPACE)
 	{
-		// ë¼ë²¨ì´ ì—†ìœ¼ë©´ ì¢…ì´ì—ì„œ ë¼ë²¨ì„ ë—€ë‹¤
+		// ¶óº§ÀÌ ¾øÀ¸¸é Á¾ÀÌ¿¡¼­ ¶óº§À» ¶¾´Ù
 		if(this->label == 0)
 		{
 			Label detachedLabel = this->paper->Detach();
 			this->label = new Label(detachedLabel);
 		}
-		this->column = this->label->Write(nChar); // ë¬¸ìë¥¼ ë¼ë²¨ì— ì ëŠ”ë‹¤
+		this->column = this->label->Write(nChar); // ¹®ÀÚ¸¦ ¶óº§¿¡ Àû´Â´Ù
 	} 
 
-	// 2. Enter keyë¥¼ ëˆ„ë¥´ë©´
+	// 2. press the Enter key
 	else if(nChar == VK_RETURN) 
 	{
-		// 1. ë—€ ë¼ë²¨ì´ ì—†ìœ¼ë©´ ì¢…ì´ì—ì„œ ë¼ë²¨ì„ ë—€ë‹¤
+		// 1. ¶¾ ¶óº§ÀÌ ¾øÀ¸¸é Á¾ÀÌ¿¡¼­ ¶óº§À» ¶¾´Ù
 		if(this->label == 0)
 		{
 			Label detachedLabel = this->paper->Detach();
 			this->label = new Label(detachedLabel);
 		}
 
-		// 2.1 1st columnì— ìˆëŠ” ê²½ìš°, ë¹ˆ ë¼ë²¨ì„ ë„£ëŠ”ë‹¤
+		// 2.1 1st column¿¡ ÀÖ´Â °æ¿ì, ºó ¶óº§À» ³Ö´Â´Ù
 		if(this->column == 0)
 		{
 			Label newLabel;
 			this->paper->Attach(newLabel);
 		}
-		// 2-2. ì¤‘ê°„ì— ìˆë‹¤
+		// 2-2. Áß°£¿¡ ÀÖ´Ù
 		else if(this->column < this->label->GetLength())
 		{
 			char* buffer = this->label->Copy(0, this->column);
@@ -103,12 +103,12 @@ void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 			this->label->Write(buffer);
 			delete buffer;
 		}
-		else // 2.3 last columnì— ìˆëŠ” ê²½ìš°, ìƒˆ ë¼ë²¨ì„ ë§Œë“¤ë‹¤
+		else // 2.3 last column¿¡ ÀÖ´Â °æ¿ì, »õ ¶óº§À» ¸¸µé´Ù
 		{
-			this->paper->Attach(*(this->label)); // ë¼ë²¨ì„ ì¢…ì´ì— ë¶™ì´ë‹¤
+			this->paper->Attach(*(this->label)); // ¶óº§À» Á¾ÀÌ¿¡ ºÙÀÌ´Ù
 
-			delete this->label; // ë¼ë²¨ì„ ì§€ìš°ë‹¤
-			this->label = new Label; // ìƒˆ ë¼ë²¨ì„ ë§Œë“¤ë‹¤
+			delete this->label; // ¶óº§À» Áö¿ì´Ù
+			this->label = new Label; // »õ ¶óº§À» ¸¸µé´Ù
 		}
 
 		this->row++;
@@ -119,51 +119,100 @@ void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 	// Start [3. Press the Backspace key]
 	else if(nChar == VK_BACK) 
 	{ 
-		// ë¼ë²¨ì´ ì—†ìœ¼ë©´ ì¢…ì´ì—ì„œ ë¼ë²¨ì„ ë—€ë‹¤
+		// ¶óº§ÀÌ ¾øÀ¸¸é Á¾ÀÌ¿¡¼­ ¶óº§À» ¶¾´Ù
 		if(this->label == 0)
 		{
 			Label detachedLabel = this->paper->Detach();
 			this->label = new Label(detachedLabel);
 		}
 
-		if(this->column != 0) // í˜„ì¬ ìœ„ì¹˜ê°€ 1st ì¹¸ì´ ì•„ë‹ˆë©´
+		if(this->column != 0) // ÇöÀç À§Ä¡°¡ 1st Ä­ÀÌ ¾Æ´Ï¸é
 		{
 			this->column = this->label->Erase(this->label->GetCurrent()-1, 1);
 		}
-		// í˜„ì¬ ìœ„ì¹˜ê°€ 1st ì¹¸ì´ê³  1st ì¤„ì´ ì•„ë‹ˆë©´
+		// ÇöÀç À§Ä¡°¡ 1st Ä­ÀÌ°í 1st ÁÙÀÌ ¾Æ´Ï¸é
 		else if(this->row != 0)			
 		{
-			// ì§€ê¸ˆ ë¼ë²¨ì— ë³µì‚¬í•  ë¬¸ìì—´ì´ ìˆì„ ë•Œ
+			// Áö±İ ¶óº§¿¡ º¹»çÇÒ ¹®ÀÚ¿­ÀÌ ÀÖÀ» ¶§
 			if(this->label->GetLength() > 0)
 			{
 				char *buffer = this->label->Copy();
 
-				delete this->label; // ë¼ë²¨ì„ ì‚­ì œí•˜ë‹¤	
+				delete this->label; // ¶óº§À» »èÁ¦ÇÏ´Ù	
 
-				Label dlabel = this->paper->Detach(); // ë¼ë²¨ì„ ì¢…ì´ì—ì„œ ë–¼ë‹¤
+				Label dlabel = this->paper->Detach(); // ¶óº§À» Á¾ÀÌ¿¡¼­ ¶¼´Ù
 				this->label = new Label(dlabel);
 				this->row--;
-				this->column = this->label->MoveEnd(); // ë¼ë²¨ì˜ ë§ˆì§€ë§‰ ì¹¸ìœ¼ë¡œ ì´ë™í•˜ë‹¤
+				this->column = this->label->MoveEnd(); // ¶óº§ÀÇ ¸¶Áö¸· Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
 
 				this->label->Write(buffer);
 				delete buffer;
 
 				this->label->Move(this->column);
 			}
-			else // ë³µì‚¬í•  ë¬¸ìì—´ì´ ì—†ì„ ë•Œ
+			else // º¹»çÇÒ ¹®ÀÚ¿­ÀÌ ¾øÀ» ¶§
 			{
-				delete this->label; // ë¼ë²¨ì„ ì‚­ì œí•˜ë‹¤	
+				delete this->label; // ¶óº§À» »èÁ¦ÇÏ´Ù	
 
-				Label dlabel = this->paper->Detach(); // ë¼ë²¨ì„ ì¢…ì´ì—ì„œ ë–¼ë‹¤
+				Label dlabel = this->paper->Detach(); // ¶óº§À» Á¾ÀÌ¿¡¼­ ¶¼´Ù
 				this->label = new Label(dlabel);
 				this->row--;
-				this->column = this->label->MoveEnd(); // ë¼ë²¨ì˜ ë§ˆì§€ë§‰ ì¹¸ìœ¼ë¡œ ì´ë™í•˜ë‹¤
+				this->column = this->label->MoveEnd(); // ¶óº§ÀÇ ¸¶Áö¸· Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
 			}
 		}
 	}
 	// End [Backspace key]
 
-	Invalidate(); // í´ë¼ì´ì–¸íŠ¸ ì˜ì—­ì„ ë¬´íš¨í™”í•˜ë‹¤
+	// Start [press the Delete key]
+	else if(nChar == VK_DELETE) 
+	{ 
+		// 1. ¶óº§ÀÌ ¾øÀ¸¸é Á¾ÀÌ¿¡¼­ ¶óº§À» ¶¾´Ù
+		if(this->label == 0)
+		{
+			this->label = new Label(this->paper->Detach());
+		}
+
+		// 2.1. ÇöÀç ¸¶Áö¸· Ä­ÀÌ ¾Æ´Ï¸é
+		if(this->column < this->label->GetLength()) 
+		{
+			// 2.1.1. ÇöÀç Ä­À» Áö¿ì´Ù
+			this->column = this->label->Erase(this->label->GetCurrent(), 1);
+		}
+		// 2.2 ÇöÀç ¸¶Áö¸· Ä­ÀÌ°í ¸¶Áö¸· ÁÙÀÌ ¾Æ´Ï¸é
+		else if(this->row < this->paper->GetLength())
+		{
+			// 2.2.1. Áö±İ ¶óº§¿¡ º¹»çÇÒ ¹®ÀÚ¿­ÀÌ ÀÖÀ» ¶§
+			if(this->label->GetLength() > 0)
+			{
+				char *buffer = this->label->Copy();
+				
+				// 2.2.1.1. ¶óº§À» »èÁ¦ÇÏ´Ù
+				delete this->label; 
+				this->label = new Label(this->paper->Detach());
+
+				this->row--;
+				// 2.2.1.2. ¶óº§ÀÇ ¸¶Áö¸· Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
+				this->column = this->label->MoveEnd(); 
+							
+				this->label->Write(buffer);
+				delete buffer;
+
+				this->label->Move(this->column);
+			}
+			else // 2.2.2. º¹»çÇÒ ¹®ÀÚ¿­ÀÌ ¾øÀ» ¶§
+			{
+				delete this->label; 
+				this->label = new Label(this->paper->Detach());
+
+				this->row--;
+				this->column = this->label->MoveEnd(); // ¶óº§ÀÇ ¸¶Áö¸· Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
+			}
+		}
+	}
+	// End [Delete key]
+
+
+	Invalidate(); // Å¬¶óÀÌ¾ğÆ® ¿µ¿ªÀ» ¹«È¿È­ÇÏ´Ù
 
 	CWnd::OnChar(nChar,nRepCnt,nFlags);
 }
@@ -182,7 +231,7 @@ void CMainFrame::DrawInputText (CDC* pDC)
 {
 	int length = this->paper->GetLength();
 
-	// last columnì´ Labelì´ë©´
+	// last columnÀÌ LabelÀÌ¸é
 	if(this->row == length)
 	{
 		for(int i = 0; i < length; i++)
@@ -195,11 +244,11 @@ void CMainFrame::DrawInputText (CDC* pDC)
 		pDC->TextOut(m_ptTextOrigin.x, this->m_cyChar*this->row, m_strInputText);
 	}
 
-	// last columnì´ Labelì´ ì•„ë‹ˆë©´
+	// last columnÀÌ LabelÀÌ ¾Æ´Ï¸é
 	// this->row < length
 	else  
 	{
-		// 1. this->row ì• ì¤„ ì¶œë ¥
+		// 1. this->row ¾Õ ÁÙ Ãâ·Â
 		for(int i = 0; i < this->row; i++)
 		{
 			Label label = this->paper->GetAt(i);
@@ -207,14 +256,14 @@ void CMainFrame::DrawInputText (CDC* pDC)
 			pDC->TextOut(m_ptTextOrigin.x, m_cyChar*i, str);
 		}
 
-		// 2.1 ë¼ë²¨ì¸ ê²½ìš°
+		// 2.1 ¶óº§ÀÎ °æ¿ì
 		if(label != 0)
 		{
-			// 2.1.1 this->row ë¼ë²¨ ì¶œë ¥
+			// 2.1.1 this->row ¶óº§ Ãâ·Â
 			m_strInputText = (char*)(*(this->label));
 			pDC->TextOut(m_ptTextOrigin.x, this->m_cyChar*this->row, m_strInputText);
 
-			// 2.1.2 this->row ë’¤ ì¤„ ì¶œë ¥
+			// 2.1.2 this->row µÚ ÁÙ Ãâ·Â
 			for(int i = this->row; i < length; i++)
 			{
 				Label label = this->paper->GetAt(i);
@@ -222,15 +271,15 @@ void CMainFrame::DrawInputText (CDC* pDC)
 				pDC->TextOut(m_ptTextOrigin.x, m_cyChar*(i+1), str);
 			}
 		}
-		// 2.2 ë¼ë²¨ì´ ì•„ë‹Œ ê²½ìš°
+		// 2.2 ¶óº§ÀÌ ¾Æ´Ñ °æ¿ì
 		else
 		{
-			// 2.2.1 this->row ì¤„ ì¶œë ¥
+			// 2.2.1 this->row ÁÙ Ãâ·Â
 			Label label = this->paper->GetAt(i); // i = this->row
 			m_strInputText = (char*)(label);
 			pDC->TextOut(m_ptTextOrigin.x, m_cyChar*i, m_strInputText);
 
-			// 2.2.2 this->row ë’¤ ì¤„ ì¶œë ¥
+			// 2.2.2 this->row µÚ ÁÙ Ãâ·Â
 			for(int i = this->row+1; i < length; i++)
 			{
 				Label label = this->paper->GetAt(i);
@@ -297,10 +346,10 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				this->column = this->paper->GetCurrent()->MoveLeft();
 			}
 		}
-		// 1st column: 1st row(0)ê°€ ì•„ë‹ˆë©´(ë³´ë‹¤ í¬ë©´) previous rowì˜ last columnìœ¼ë¡œ ì´ë™í•¨
+		// 1st column: 1st row(0)°¡ ¾Æ´Ï¸é(º¸´Ù Å©¸é) previous rowÀÇ last columnÀ¸·Î ÀÌµ¿ÇÔ
 		else if(this->row > 0) 
 		{
-			// ì§€ê¸ˆì´ ë¼ë²¨ ìœ„ë©´ ë¶™ì´ê³  ì´ë™í•œë‹¤
+			// Áö±İÀÌ ¶óº§ À§¸é ºÙÀÌ°í ÀÌµ¿ÇÑ´Ù
 			if(label != 0) 
 			{
 				this->paper->Attach(*(this->label));
@@ -315,26 +364,26 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 		break;
 
-		// Start [ì˜¤ë¥¸ìª½ í‚¤ë¥¼ ëˆŒë €ì„ ë•Œ]
+		// Start [¿À¸¥ÂÊ Å°¸¦ ´­·¶À» ¶§]
 	case VK_RIGHT:
 
-		// 1.1 labelì´ ìˆë‹¤ë©´
+		// 1.1 labelÀÌ ÀÖ´Ù¸é
 		if(this->label != 0) 
 		{
-			// 1.1.1.  ë§ˆì§€ë§‰ ì¹¸ì´ ì•„ë‹ˆë©´, ë‹¤ìŒ ì¹¸ìœ¼ë¡œ ì´ë™í•˜ë‹¤
+			// 1.1.1.  ¸¶Áö¸· Ä­ÀÌ ¾Æ´Ï¸é, ´ÙÀ½ Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
 			if(this->column < this->label->GetLength())
 			{
 				this->column = this->label->MoveRight();
 			}
-			// 1.1.2. ë§ˆì§€ë§‰ ì¹¸ì´ë©´
+			// 1.1.2. ¸¶Áö¸· Ä­ÀÌ¸é
 			else
 			{
-				// 1.1.2.1. ë‹¤ìŒ ì¤„ì´ ìˆìœ¼ë©´
+				// 1.1.2.1. ´ÙÀ½ ÁÙÀÌ ÀÖÀ¸¸é
 				if(this->row < this->paper->GetLength())
 				{
 					this->paper->Attach(*(this->label));
 
-					// ë¼ë²¨ì„ ì‚­ì œí•˜ë‹¤
+					// ¶óº§À» »èÁ¦ÇÏ´Ù
 					delete label; label = 0;
 
 					this->paper->MoveDown();
@@ -343,15 +392,15 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				}
 			}
 		}
-		// 1.2 ë¼ë²¨ì´ ì—†ìœ¼ë©´
+		// 1.2 ¶óº§ÀÌ ¾øÀ¸¸é
 		else 
 		{
-			// 1.2.1.  ë§ˆì§€ë§‰ ì¹¸ì´ ì•„ë‹ˆë©´, ë‹¤ìŒ ì¹¸ìœ¼ë¡œ ì´ë™í•˜ë‹¤
+			// 1.2.1.  ¸¶Áö¸· Ä­ÀÌ ¾Æ´Ï¸é, ´ÙÀ½ Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
 			if(this->column < this->paper->GetCurrent()->GetLength())
 			{
 				this->column = this->paper->GetCurrent()->MoveRight();
 			}
-			// 2.2. ë§ˆì§€ë§‰ ì¹¸ì´ë©´
+			// 2.2. ¸¶Áö¸· Ä­ÀÌ¸é
 			else
 			{
 				if(this->row < this->paper->GetLength()-1)
@@ -365,16 +414,16 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 		break;
 
-		// ìœ„ë¡œ ê°€ê¸° í‚¤ë¥¼ ëˆ„ë¥¸ ê²½ìš°
+		// À§·Î °¡±â Å°¸¦ ´©¸¥ °æ¿ì
 	case VK_UP:
-		// 1. first line(0 row)ì´ ì•„ë‹ˆë©´
+		// 1. first line(0 row)ÀÌ ¾Æ´Ï¸é
 		if(this->row > 0)
 		{
-			// 1.1. ë¼ë²¨ì´ ìˆìœ¼ë©´ if(label != 0)
+			// 1.1. ¶óº§ÀÌ ÀÖÀ¸¸é if(label != 0)
 			if(this->label != 0)
 			{
 				this->paper->Attach(*(this->label));
-				// 1.1.2. ë¼ë²¨ì„ ì‚­ì œí•˜ë‹¤
+				// 1.1.2. ¶óº§À» »èÁ¦ÇÏ´Ù
 				delete label; label = 0;
 			}
 			this->paper->MoveUp();
@@ -391,34 +440,34 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		break;
 
 	case VK_DOWN:
-		// 1. ì¤„ì˜ ê¸¸ì´ë¥¼ êµ¬í•˜ë‹¤ 
+		// 1. ÁÙÀÇ ±æÀÌ¸¦ ±¸ÇÏ´Ù 
 		int last = this->paper->GetLength();
-		// 2. ë¼ë²¨ì´ ì—†ìœ¼ë©´ ê¸¸ì´ ê°ì†Œ 
+		// 2. ¶óº§ÀÌ ¾øÀ¸¸é ±æÀÌ °¨¼Ò 
 		if(this->label == 0) 
 		{
 			last--;
 		}
-		// 3. last lineì´ ì•„ë‹ˆë©´ 
+		// 3. last lineÀÌ ¾Æ´Ï¸é 
 		if(this->row < last)
 		{
-			// 3.1 ë¼ë²¨ì´ ìˆìœ¼ë©´
+			// 3.1 ¶óº§ÀÌ ÀÖÀ¸¸é
 			if(this->label != 0)
 			{
-				// 3.1.1. ë¼ë²¨ì„ ë¶™ì´ë‹¤
+				// 3.1.1. ¶óº§À» ºÙÀÌ´Ù
 				this->paper->Attach(*(this->label));
-				// 3.1.2. ë¼ë²¨ì„ ì‚­ì œí•˜ë‹¤
+				// 3.1.2. ¶óº§À» »èÁ¦ÇÏ´Ù
 				delete label; label = 0;
 			}
-			// 3.2. ë‹¤ìŒ ì¤„ë¡œ ì´ë™í•˜ë‹¤ 
+			// 3.2. ´ÙÀ½ ÁÙ·Î ÀÌµ¿ÇÏ´Ù 
 			this->paper->MoveDown();
-			// 3.3. ì¤„ ì¦ê°€
+			// 3.3. ÁÙ Áõ°¡
 			this->row++;
-			// 3.3. xë²ˆì§¸ ì¹¸ìœ¼ë¡œ ì´ë™í•˜ë‹¤
+			// 3.3. x¹øÂ° Ä­À¸·Î ÀÌµ¿ÇÏ´Ù
 			this->column = this->paper->GetCurrent()->Move(this->column);
 		}
 		break;
 	}
 
-	Invalidate(); // í´ë¼ì´ì–¸íŠ¸ ì˜ì—­ì„ ë¬´íš¨í™”í•˜ë‹¤
+	Invalidate(); // Å¬¶óÀÌ¾ğÆ® ¿µ¿ªÀ» ¹«È¿È­ÇÏ´Ù
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
