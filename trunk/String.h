@@ -12,7 +12,8 @@ public:
 	String& operator=(const String& source);
 	char& GetAt(int index) const;
 	char& operator[](int index);	
-	char* operator+(int index); 
+	char* operator+(int index);
+	operator char*();
 
 	int GetLength() const;
 	int GetCapacity() const;
