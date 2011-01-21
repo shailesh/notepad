@@ -29,8 +29,9 @@ public:
 	int MoveRight();
 	int MoveHome();
 	int MoveEnd();
+
 	int Move(int index);
-	void Copy(char* (*buffer));
+	char* Copy();
 	char* Copy(int first, int count);	
 
 private:
