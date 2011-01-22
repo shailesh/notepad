@@ -125,7 +125,7 @@ void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 			Label detachedLabel = this->paper->Detach();
 			this->label = new Label(detachedLabel);
 		}
-
+		
 		if(this->column != 0) // 현재 위치가 1st 칸이 아니면
 		{
 			this->column = this->label->Erase(this->label->GetCurrent()-1, 1);
@@ -160,8 +160,7 @@ void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 				this->column = this->label->MoveEnd(); // 라벨의 마지막 칸으로 이동하다
 			}
 		}
-	}
-	// End [Backspace key]
+	} // End [Backspace key]
 
 	// Start [press the Delete key]
 	else if(nChar == VK_DELETE) 
@@ -208,9 +207,7 @@ void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 				this->column = this->label->MoveEnd(); // 라벨의 마지막 칸으로 이동하다
 			}
 		}
-	}
-	// End [Delete key]
-
+	} // End [Delete key]
 
 	Invalidate(); // 클라이언트 영역을 무효화하다
 
@@ -335,7 +332,7 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	switch(nChar) {
 	case VK_LEFT:
 		// is not the 1st column
-		if(this->column != 0) 
+		if(this->column > 0) 
 		{
 			if(label != 0) 
 			{
