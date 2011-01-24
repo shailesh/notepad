@@ -20,21 +20,26 @@ public:
 	int column;
 
 	int m_cxChar;                // Average character width
-	int m_cyChar;                // Character height
+	int cyChar;                // Character height
 	int m_nTextPos;              // Index of current character in text box
-	CPoint m_ptTextOrigin;       // Origin for drawing input text
+	CPoint ptTextOrigin;       // Origin for drawing input text
 	CPoint m_ptCaretPos;         // Current caret position
 	CString m_strInputText;                // Input text
+
+	int shift;
+	CPoint ptStart;
 
 protected:
 	void DrawInputText (CDC* pDC);
 	void PositionCaret (CDC* pDC = NULL);
+	void DrawBackground(CDC* pDC);
 
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnClose();
 	afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnPaint();
 	afx_msg void OnSetFocus (CWnd* pWnd);
 	afx_msg void OnKillFocus (CWnd* pWnd);
