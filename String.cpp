@@ -1,8 +1,5 @@
 // String.cpp
 
-#include <string>
-using namespace std;
-
 #include "String.h"
 
 String::String(int capacity) 
@@ -93,10 +90,9 @@ int String::Append(char ch)
 	return this->length;
 }
 
-int String::Append(char* pstr) 
+int String::Append(char* pstr, int count) 
 {
 	int i;
-	int count = strlen(pstr);
 	
 	if(this->length >= this->capacity-1) 
 	{
@@ -161,16 +157,15 @@ int String::Insert(int index, char ch)
 	return index;
 }
 
-int String::Insert(int index, char* pstr) 
+int String::Insert(int index, char* pstr, int count) 
 {
 	int i;
-	int count = strlen(pstr);
 	
 	if(this->length < this->capacity-1) 
 	{            
-		for(i = this->length+strlen(pstr); i > index; i--) 
+		for(i = this->length+count; i > index; i--) 
 		{
-			this->front[i] = this->front[i-strlen(pstr)];
+			this->front[i] = this->front[i-count];
 		}
 	} 
 	else 
