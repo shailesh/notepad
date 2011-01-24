@@ -1,4 +1,6 @@
 // Label.cpp
+#include <string>
+using namespace std;
 
 #include "Label.h"
 
@@ -67,15 +69,16 @@ int Label::Write(char ch)
 
 int Label::Write(char* pstr) 
 {
+	int count = strlen(pstr);
 	if(this->current == this->length) 
 	{
-		this->current = this->str.Append(pstr);
+		this->current = this->str.Append(pstr, count);
 	} 
 	else 
 	{
-		this->current = this->str.Insert(this->current, pstr);
+		this->current = this->str.Insert(this->current, pstr, count);
 	}
-	this->length++;
+	this->length+=count;
 
 	return this->current;
 }
@@ -83,7 +86,7 @@ int Label::Write(char* pstr)
 int Label::Erase(int index, int count) 
 {
 	this->current = this->str.Delete(index, count);
-	this->length--;
+	this->length-=count;
 
 	return this->current;
 }
