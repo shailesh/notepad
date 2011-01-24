@@ -20,7 +20,10 @@ public:
 	Label* GetCurrent() const;
 
 	Label* Attach(Label label);
+	
 	Label Detach();
+	Label Detach(Label* index);
+
 	Label Erase();
 
 	Label* MoveUp();
