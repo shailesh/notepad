@@ -19,9 +19,9 @@ public:
 	int GetCapacity() const;
 
 	int Append(char ch);
-	int Append(char* pstr);
+	int Append(char* pstr, int count);
 	int Insert(int index, char ch);  
-	int Insert(int index, char* pstr); 
+	int Insert(int index, char* pstr, int count); 
 	int Delete(int index, int count);
 
 	char* Mid(int first, int count);
