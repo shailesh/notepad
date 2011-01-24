@@ -6,7 +6,8 @@
 template <typename T>
 class LinkedList {
 public:
-	class Node {
+	class Node 
+	{
 		friend LinkedList;
 	public:
 		Node() 
@@ -404,37 +405,39 @@ LinkedList<T>::Node* LinkedList<T>::Delete()
 template <typename T>
 LinkedList<T>::Node* LinkedList<T>::Delete(Node* index)
 {
-	this->current = index;
-
 	if(this->length > 1) 
 	{
-		if(this->current == this->head) 
+		if(index == this->head) 
 		{
-			this->current->next->previous = this->current->next;
-			this->head = this->current->next;
-		}
-		else if(this->current == this->tail) 
+			index->next->previous = index->next;
+			this->head = index->next;
+			this->current = 0;
+		} 
+		else if(index == this->tail) 
 		{
-			this->current->previous->next = this->current->previous;
-			this->tail = this->current->previous;
-		}
+			index->previous->next = index->previous;
+			this->tail = index->previous;
+			this->current = this->tail;
+		} 
 		else
 		{
-			this->current->next->previous = this->current->previous;
-			this->current->previous->next = this->current->next;
+			index->next->previous = index->previous;
+			index->previous->next = index->next;
+			this->current = this->current->previous;
 		}
-	}
+	} 
 	else 
 	{
 		this->head = 0;
 		this->tail = 0;
-	}
-
-	if(this->current != 0)
-	{
-		delete this->current;
 		this->current = 0;
 	}
+	
+	if(index != 0) 
+	{
+		delete index;
+	}
+
 	this->length--;
 
 	return this->current;
