@@ -2,6 +2,9 @@
 
 #include "MainFrm.h"
 #include "Paper.h"
+#include "Toolbox.h"
+#include "Pen.h"
+#include "Clipboard.h"
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
@@ -11,6 +14,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_KILLFOCUS()
 	ON_WM_KEYDOWN()
+	ON_WM_KEYUP()
 END_MESSAGE_MAP()
 
 CMainFrame::CMainFrame()
@@ -19,6 +23,11 @@ CMainFrame::CMainFrame()
 	this->column = 0;
 	this->paper = 0;
 	this->label = 0;
+	this->ptStart.x = -1;
+	this->ptStart.y = -1;
+	this->toolbox = 0;
+	this->pen = 0;
+	this->clipboard = 0;
 }
 
 CMainFrame::~CMainFrame(){}
@@ -30,17 +39,20 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	this->paper = new Paper;
 	this->label = new Label;
+	this->pen = new Pen;
+	this->toolbox = new Toolbox;
+	this->clipboard = new Clipboard;
 
 	CClientDC dc (this);
 	TEXTMETRIC tm;
 	dc.GetTextMetrics(&tm);
 
-	this->m_cxChar = tm.tmAveCharWidth/4;
-	this->m_cyChar = tm.tmHeight;	
+	this->cxChar = tm.tmAveCharWidth/4;
+	this->cyChar = tm.tmHeight;	
 
-	m_ptTextOrigin.x = m_cxChar;
-	m_ptTextOrigin.y = m_cyChar/4;
-	m_ptCaretPos = m_ptTextOrigin;
+	ptTextOrigin.x = cxChar;
+	ptTextOrigin.y = cyChar/4;
+	m_ptCaretPos = ptTextOrigin;
 
 	return 0;
 }
@@ -55,162 +67,173 @@ void CMainFrame::OnClose()
 	{
 		delete this->label;
 	}
+	if(this->toolbox != 0)
+	{
+		delete this->toolbox;
+	}
+	if(this->clipboard != 0)
+	{
+		delete this->clipboard;
+	}
+
 	CFrameWnd::OnClose();
 }
 
 void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	// 1. 문자(숫자, spacebar)키를 누르면
-	if((nChar>='0' && nChar<='9') || (nChar>='A' && nChar<='z') || nChar == VK_SPACE)
+	switch(nChar)
 	{
-		// 라벨이 없으면 종이에서 라벨을 뗀다
-		if(this->label == 0)
+	case VK_RETURN:
+		if(this->toolbox->GetShift() == false)
 		{
-			Label detachedLabel = this->paper->Detach();
-			this->label = new Label(detachedLabel);
+			this->pen->OnEnterKeyDown(&(this->paper), &(this->label), this->column);
+			this->row++;
+			this->column = 0;
 		}
-		this->column = this->label->Write(nChar); // 문자를 라벨에 적는다
-	} 
-
-	// 2. press the Enter key
-	else if(nChar == VK_RETURN) 
-	{
-		// 1. 뗀 라벨이 없으면 종이에서 라벨을 뗀다
-		if(this->label == 0)
+		break;
+	
+	// Backspace Key
+	case VK_BACK:
+		// Delete not selected, just cursor
+		if(this->ptStart.x < 0) 
 		{
-			Label detachedLabel = this->paper->Detach();
-			this->label = new Label(detachedLabel);
-		}
-
-		// 2.1 1st column에 있는 경우, 빈 라벨을 넣는다
-		if(this->column == 0)
+			this->pen->OnBackspaceKeyDown(&(this->paper), &(this->label), &(this->column), &(this->row));
+		} 
+		// Delete selected section : shift key pressed & Backspace key
+		else
 		{
-			Label newLabel;
-			this->paper->Attach(newLabel);
-		}
-		// 2-2. 중간에 있다
-		else if(this->column < this->label->GetLength())
-		{
-			char* buffer = this->label->Copy(0, this->column);
-			Label prevLabel;
-			prevLabel.Write(buffer);
-			this->paper->Attach(prevLabel);
-			delete buffer;
-
-			buffer = this->label->Copy(this->column, this->label->GetLength()-this->column);
-			delete this->label;
-			this->label = new Label;
-			this->label->Write(buffer);
-			delete buffer;
-		}
-		else // 2.3 last column에 있는 경우, 새 라벨을 만들다
-		{
-			this->paper->Attach(*(this->label)); // 라벨을 종이에 붙이다
-
-			delete this->label; // 라벨을 지우다
-			this->label = new Label; // 새 라벨을 만들다
-		}
-
-		this->row++;
-		this->column = 0;
-	}
-	// End [2. Enter Key]
-
-	// Start [3. Press the Backspace key]
-	else if(nChar == VK_BACK) 
-	{ 
-		// 라벨이 없으면 종이에서 라벨을 뗀다
-		if(this->label == 0)
-		{
-			Label detachedLabel = this->paper->Detach();
-			this->label = new Label(detachedLabel);
-		}
-		
-		if(this->column != 0) // 현재 위치가 1st 칸이 아니면
-		{
-			this->column = this->label->Erase(this->label->GetCurrent()-1, 1);
-		}
-		// 현재 위치가 1st 칸이고 1st 줄이 아니면
-		else if(this->row != 0)			
-		{
-			// 지금 라벨에 복사할 문자열이 있을 때
-			if(this->label->GetLength() > 0)
+			//this->pen->OnBackspaceKeyDown(&(this->paper), &(this->label), &(this->column), &(this->row), this->ptStart);
+			if(this->ptStart.y == this->row)
 			{
-				char *buffer = this->label->Copy();
+				if(this->label == 0)
+				{
+					this->label = new Label(this->paper->Detach());
+				}
 
-				delete this->label; // 라벨을 삭제하다	
-
-				Label dlabel = this->paper->Detach(); // 라벨을 종이에서 떼다
-				this->label = new Label(dlabel);
-				this->row--;
-				this->column = this->label->MoveEnd(); // 라벨의 마지막 칸으로 이동하다
-
-				this->label->Write(buffer);
-				delete buffer;
-
-				this->label->Move(this->column);
+				if(this->ptStart.x < this->column)
+				{
+					this->column = this->label->Erase(ptStart.x, this->column-this->ptStart.x);
+				}
+				else if(this->ptStart.x > this->column)
+				{
+					this->column = this->label->Erase(this->column, this->ptStart.x-this->column);
+				}
 			}
-			else // 복사할 문자열이 없을 때
+			else
 			{
-				delete this->label; // 라벨을 삭제하다	
-
-				Label dlabel = this->paper->Detach(); // 라벨을 종이에서 떼다
-				this->label = new Label(dlabel);
-				this->row--;
-				this->column = this->label->MoveEnd(); // 라벨의 마지막 칸으로 이동하다
-			}
-		}
-	} // End [Backspace key]
-
-	// Start [press the Delete key]
-	else if(nChar == VK_DELETE) 
-	{ 
-		// 1. 라벨이 없으면 종이에서 라벨을 뗀다
-		if(this->label == 0)
-		{
-			this->label = new Label(this->paper->Detach());
-		}
-
-		// 2.1. 현재 마지막 칸이 아니면
-		if(this->column < this->label->GetLength()) 
-		{
-			// 2.1.1. 현재 칸을 지우다
-			this->column = this->label->Erase(this->label->GetCurrent(), 1);
-		}
-		// 2.2 현재 마지막 칸이고 마지막 줄이 아니면
-		else if(this->row < this->paper->GetLength())
-		{
-			// 2.2.1. 지금 라벨에 복사할 문자열이 있을 때
-			if(this->label->GetLength() > 0)
-			{
-				char *buffer = this->label->Copy();
+				CPoint ptFirst(0, 0);
+				CPoint ptLast(0, 0);
+				CString strFirst, strLast;
 				
-				// 2.2.1.1. 라벨을 삭제하다
-				delete this->label; 
-				this->label = new Label(this->paper->Detach());
+				Label lbStart(this->paper->GetAt(this->ptStart.y));
+				Label lbCurrent(*(this->paper->GetCurrent()));
 
-				this->row--;
-				// 2.2.1.2. 라벨의 마지막 칸으로 이동하다
-				this->column = this->label->MoveEnd(); 
-							
-				this->label->Write(buffer);
+				if(this->ptStart.y < this->row)
+				{
+					ptFirst.Offset(this->ptStart);
+					ptLast.Offset(this->column, this->row);
+					strFirst = (char*)(lbStart);
+					strLast = (char*)(lbCurrent);
+				}
+				else
+				{
+					ptFirst.Offset(this->column, this->row);
+					ptLast.Offset(this->ptStart);
+					strFirst = (char*)(lbCurrent);
+					strLast = (char*)(lbStart);
+				}
+
+				this->label = new Label(this->paper->Detach(&(this->paper->GetAt(ptLast.y))));
+
+				char* buffer = this->label->Copy(ptLast.x, this->label->GetLength()-ptLast.x);
+				delete this->label;
+
+				for(int i = ptLast.y-1; i > ptFirst.y; i--)
+				{
+					this->label = new Label(this->paper->Detach(&(this->paper->GetAt(i))));
+					delete this->label;
+				}
+				this->label = new Label(this->paper->Detach(&(this->paper->GetAt(ptFirst.y))));
+				this->column = this->label->Erase(ptFirst.x, this->label->GetLength()-ptFirst.x);
+				this->label->Store(buffer);
 				delete buffer;
-
-				this->label->Move(this->column);
+				this->row = ptFirst.y;
 			}
-			else // 2.2.2. 복사할 문자열이 없을 때
-			{
-				delete this->label; 
-				this->label = new Label(this->paper->Detach());
+			this->toolbox->ShiftUp();
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
+		break;
 
-				this->row--;
-				this->column = this->label->MoveEnd(); // 라벨의 마지막 칸으로 이동하다
+	default:
+		if((nChar>='0' && nChar<='9') || (nChar>='A' && nChar<='z') || nChar == VK_SPACE)
+		{
+			if(this->label == 0)
+			{
+				//this->label = new Label(this->paper->Detach());
+				this->label = new Label(this->paper->Detach(this->paper->GetCurrent()));
+			}
+			this->column = this->label->Write(nChar);
+		}
+		break;
+	}// switch case
+	
+	//if(GetKeyState(VK_CONTROL) & 0x8000)
+	if(this->toolbox->GetControl() && nFlags == 46)
+	{
+		if(this->ptStart.x > -1)
+		{
+			if(this->ptStart.y == this->row)
+			{
+				int index, count;
+
+				this->clipboard = new Clipboard(1);
+				if(this->ptStart.x < this->column)
+				{
+					index = this->ptStart.x;
+					count = this->column - this->ptStart.x;
+				}
+				else if(this->ptStart.x > this->column)
+				{
+					index = this->column;
+					count = this->ptStart.x - this->column;
+				}
+				Label label;
+				if(this->label != 0)
+				{
+					label = *(this->label);
+				}
+				else
+				{
+					label = *(this->paper->GetCurrent());
+				}
+				char* copy = label.Copy(index, count);
+				this->clipboard->Record(copy);
+				//cstring.Format("%s", this->clipboard->GetAt(0).c_str());
+				cstring = this->clipboard->GetAt(0);
+			}
+			else
+			{
+				CPoint first;
+				CPoint last;
+
+				if(this->ptStart.y < this->row)
+				{
+					first = this->ptStart;
+					last = CPoint(this->column, this->row);
+				}
+				else
+				{
+					first = CPoint(this->column, this->row);
+					last =  this->ptStart;
+				}
+
+				this->clipboard = new Clipboard(last.y - first.y);
 			}
 		}
-	} // End [Delete key]
+	}
 
-	Invalidate(); // 클라이언트 영역을 무효화하다
-
+	Invalidate();
 	CWnd::OnChar(nChar,nRepCnt,nFlags);
 }
 
@@ -220,100 +243,143 @@ void CMainFrame::OnPaint()
 
 	HideCaret();
 	DrawInputText (&dc);
+	if(this->ptStart.x > -1)
+	{
+		DrawBackground(&dc);
+	}
 	PositionCaret(&dc);
 	ShowCaret();
 }
 
 void CMainFrame::DrawInputText (CDC* pDC)
 {
-	int length = this->paper->GetLength();
-
-	// last column이 Label이면
-	if(this->row == length)
+	CString str;
+	int i;
+	
+	if(this->label == 0)
 	{
-		for(int i = 0; i < length; i++)
+		for(i = 0; i < this->paper->GetLength(); i++)
 		{
 			Label label = this->paper->GetAt(i);
-			CString str = (char*)(label);
-			pDC->TextOut(m_ptTextOrigin.x, m_cyChar*i, str);
+			str = (char*)(label);
+			pDC->TextOut(0, this->cyChar*i, str);
 		}
-		m_strInputText = (char*)(*(this->label));
-		pDC->TextOut(m_ptTextOrigin.x, this->m_cyChar*this->row, m_strInputText);
 	}
-
-	// last column이 Label이 아니면
-	// this->row < length
 	else  
 	{
-		// 1. this->row 앞 줄 출력
-		for(int i = 0; i < this->row; i++)
+		for(i = 0; i < this->row; i++)
 		{
 			Label label = this->paper->GetAt(i);
-			CString str = (char*)(label);
-			pDC->TextOut(m_ptTextOrigin.x, m_cyChar*i, str);
+			str = (char*)(label);
+			pDC->TextOut(0, cyChar*i, str);
 		}
 
-		// 2.1 라벨인 경우
-		if(label != 0)
+		str = (char*)(*(this->label));
+		pDC->TextOut(0, this->cyChar*this->row, str);
+
+		for(i = this->row; i < this->paper->GetLength(); i++)
 		{
-			// 2.1.1 this->row 라벨 출력
-			m_strInputText = (char*)(*(this->label));
-			pDC->TextOut(m_ptTextOrigin.x, this->m_cyChar*this->row, m_strInputText);
-
-			// 2.1.2 this->row 뒤 줄 출력
-			for(int i = this->row; i < length; i++)
-			{
-				Label label = this->paper->GetAt(i);
-				CString str = (char*)(label);
-				pDC->TextOut(m_ptTextOrigin.x, m_cyChar*(i+1), str);
-			}
+			Label label = this->paper->GetAt(i);
+			str = (char*)(label);
+			pDC->TextOut(0, this->cyChar*(i+1), str);
 		}
-		// 2.2 라벨이 아닌 경우
+	}
+
+	pDC->TextOut(100, 100, this->cstring);
+}
+
+void CMainFrame::DrawBackground(CDC* pDC)
+{
+	CString str;
+	pDC->SetBkColor(RGB(192, 192, 192));
+
+	if(this->ptStart.y == this->row)
+	{
+		if(this->label != 0)
+		{
+			str = (char*)(*(this->label));
+		}
 		else
 		{
-			// 2.2.1 this->row 줄 출력
-			Label label = this->paper->GetAt(i); // i = this->row
-			m_strInputText = (char*)(label);
-			pDC->TextOut(m_ptTextOrigin.x, m_cyChar*i, m_strInputText);
-
-			// 2.2.2 this->row 뒤 줄 출력
-			for(int i = this->row+1; i < length; i++)
-			{
-				Label label = this->paper->GetAt(i);
-				CString str = (char*)(label);
-				pDC->TextOut(m_ptTextOrigin.x, m_cyChar*i, str);
-			}
+			Label label = *(this->paper->GetCurrent());
+			str = (char*)(label);
 		}
+
+		if(this->ptStart.x < this->column)
+		{
+			CString left = str.Left(this->ptStart.x);
+			pDC->TextOut((pDC->GetTextExtent(left, left.GetLength())).cx, this->cyChar*this->row, str.Mid(this->ptStart.x, this->column-this->ptStart.x));
+		}
+		else if(this->ptStart.x > this->column)
+		{
+			CString left = str.Left(this->column);
+			pDC->TextOut((pDC->GetTextExtent(left, left.GetLength())).cx, this->cyChar*this->row, str.Mid(this->column, this->ptStart.x-this->column));
+		}
+	}
+	else
+	{
+		CPoint first;
+		CPoint last;
+		CString strFirst, strLast;
+		
+		Label lbStart(this->paper->GetAt(this->ptStart.y));
+		Label lbCurrent(*(this->paper->GetCurrent()));
+
+		if(this->ptStart.y < this->row)
+		{
+			first = this->ptStart;
+			last = CPoint(this->column, this->row);
+			strFirst = (char*)(lbStart);
+			strLast = (char*)(lbCurrent);
+		}
+		else
+		{
+			first = CPoint(this->column, this->row);
+			last = this->ptStart;
+			strFirst = (char*)(lbCurrent);
+			strLast = (char*)(lbStart);	
+		}
+
+		CString left = strFirst.Left(first.x);
+		pDC->TextOut((pDC->GetTextExtent(left, left.GetLength())).cx, this->cyChar*first.y, strFirst.Right(strFirst.GetLength()-first.x));
+
+		for(int i = first.y+1; i < last.y; i++)
+		{
+			Label label = this->paper->GetAt(i);
+			str = (char*)(label);
+			pDC->TextOut(0, this->cyChar*i, str);
+		}
+		left = strLast.Left(last.x);
+		pDC->TextOut(0, this->cyChar*last.y, left);
 	}
 }
 
 void CMainFrame::PositionCaret (CDC* pDC)
-{/*
- BOOL bRelease = FALSE;
+{
+	CString str;
+	CPoint point;
 
- if (pDC == NULL) {
- pDC = GetDC();
- bRelease = TRUE;
- }
- */
-	CPoint point = m_ptTextOrigin;
-	//CString string = m_strInputText.Left(m_nTextPos);
-	CString string = m_strInputText.Left(this->column);
-	point.x += (pDC->GetTextExtent(string, string.GetLength())).cx;
-	point.y = this->m_cyChar * this->row;
+	if(this->label != 0)
+	{
+		str = (char*)(*(this->label));
+	}
+	else
+	{
+		Label label = *(this->paper->GetCurrent());
+		str = (char*)(label);
+	}
+
+	CString string = str.Left(this->column);
+
+	point.x = (pDC->GetTextExtent(string, string.GetLength())).cx;
+	point.y = this->cyChar * this->row;
 	SetCaretPos(point);
-
-	//
-	// Release the device context if it was created inside this function.
-	//
-	//    if (bRelease)
-	//        ReleaseDC (pDC);
 }
 
 void CMainFrame::OnSetFocus(CWnd* pWnd)
 {
-	CreateSolidCaret(m_cxChar, m_cyChar);
-	SetCaretPos(m_ptCaretPos);
+	CreateSolidCaret(this->cxChar, this->cyChar);
+	SetCaretPos(this->m_ptCaretPos);
 	ShowCaret();
 }
 
@@ -324,14 +390,35 @@ void CMainFrame::OnKillFocus (CWnd* pWnd)
 	//
 	HideCaret ();
 	m_ptCaretPos = GetCaretPos();
-	::DestroyCaret ();
+	::DestroyCaret();
 }
 
 void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	switch(nChar) {
+
+	case VK_SHIFT:
+		if(this->toolbox->GetShift() == false)
+		{
+			this->toolbox->ShiftDown();
+			if(this->ptStart.x == -1)
+			{
+				this->ptStart.x = this->column;
+				this->ptStart.y = this->row;
+			}
+		}
+		break;
+
+	case VK_CONTROL:
+		if(this->toolbox->GetControl() == false)
+		{
+			this->toolbox->ControlDown();
+		}
+		//if(GetKeyState (VK_CONTROL) & 0x8000){}
+
+		break;
+
 	case VK_LEFT:
-		// is not the 1st column
 		if(this->column > 0) 
 		{
 			if(label != 0) 
@@ -343,10 +430,8 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				this->column = this->paper->GetCurrent()->MoveLeft();
 			}
 		}
-		// 1st column: 1st row(0)가 아니면(보다 크면) previous row의 last column으로 이동함
 		else if(this->row > 0) 
 		{
-			// 지금이 라벨 위면 붙이고 이동한다
 			if(label != 0) 
 			{
 				this->paper->Attach(*(this->label));
@@ -359,69 +444,69 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			this->column = this->paper->GetCurrent()->MoveEnd();
 		}
 
+		if(this->toolbox->GetShift() == false)
+		{
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
+
 		break;
 
-		// Start [오른쪽 키를 눌렀을 때]
 	case VK_RIGHT:
-
-		// 1.1 label이 있다면
 		if(this->label != 0) 
 		{
-			// 1.1.1.  마지막 칸이 아니면, 다음 칸으로 이동하다
 			if(this->column < this->label->GetLength())
 			{
 				this->column = this->label->MoveRight();
 			}
-			// 1.1.2. 마지막 칸이면
 			else
 			{
-				// 1.1.2.1. 다음 줄이 있으면
 				if(this->row < this->paper->GetLength())
 				{
 					this->paper->Attach(*(this->label));
 
-					// 라벨을 삭제하다
-					delete label; label = 0;
+					delete this->label; 
+					this->label = 0;
 
 					this->paper->MoveDown();
 					this->row++;
-					this->column = this->paper->GetCurrent()->MoveHome(); // 0
+					this->column = this->paper->GetCurrent()->MoveHome();
 				}
 			}
 		}
-		// 1.2 라벨이 없으면
 		else 
 		{
-			// 1.2.1.  마지막 칸이 아니면, 다음 칸으로 이동하다
 			if(this->column < this->paper->GetCurrent()->GetLength())
 			{
 				this->column = this->paper->GetCurrent()->MoveRight();
 			}
-			// 2.2. 마지막 칸이면
 			else
 			{
 				if(this->row < this->paper->GetLength()-1)
 				{
 					this->paper->MoveDown();
 					this->row++;
-					this->column = this->paper->GetCurrent()->MoveHome(); // 0
+					this->column = this->paper->GetCurrent()->MoveHome(); 
 				}
 			}			
 		}
 
+		if(this->toolbox->GetShift() == false)
+		{
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
 		break;
 
-		// 위로 가기 키를 누른 경우
 	case VK_UP:
-		// 1. first line(0 row)이 아니면
+
 		if(this->row > 0)
 		{
-			// 1.1. 라벨이 있으면 if(label != 0)
 			if(this->label != 0)
 			{
 				this->paper->Attach(*(this->label));
-				// 1.1.2. 라벨을 삭제하다
-				delete label; label = 0;
+				delete this->label; 
+				this->label = 0;
 			}
 			this->paper->MoveUp();
 			this->row--;
@@ -434,37 +519,126 @@ void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			this->column = this->paper->GetCurrent()->MoveEnd();
 			*/
 		}
+
+		if(this->toolbox->GetShift() == false)
+		{
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
+		break;
+	
+	case VK_DOWN:
+
+		if(this->label != 0)
+		{
+			if(this->row < this->paper->GetLength())
+			{
+				this->paper->Attach(*(this->label));
+				delete this->label; 
+				this->label = 0;
+
+				this->paper->MoveDown();
+				this->row++;
+				this->column = this->paper->GetCurrent()->Move(this->column);
+			}
+		}
+		else if(this->row < this->paper->GetLength()-1)
+		{
+			this->paper->MoveDown();
+			this->row++;
+			this->column = this->paper->GetCurrent()->Move(this->column);
+		}
+
+		if(this->toolbox->GetShift() == false)
+		{
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
+		break;
+	
+	case VK_HOME:
+		if(this->label != 0)
+		{
+			this->column = this->label->MoveHome();
+		}
+		else
+		{
+			this->column = this->paper->GetCurrent()->MoveHome();
+		}
+
+		if(this->toolbox->GetShift() == false)
+		{
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
 		break;
 
-	case VK_DOWN:
-		// 1. 줄의 길이를 구하다 
-		int last = this->paper->GetLength();
-		// 2. 라벨이 없으면 길이 감소 
-		if(this->label == 0) 
+	case VK_END:
+		if(this->label != 0)
 		{
-			last--;
+			this->column = this->label->MoveEnd();
 		}
-		// 3. last line이 아니면 
-		if(this->row < last)
+		else
 		{
-			// 3.1 라벨이 있으면
-			if(this->label != 0)
+			this->column = this->paper->GetCurrent()->MoveEnd();
+		}
+
+		if(this->toolbox->GetShift() == false)
+		{
+			this->ptStart.x = -1;
+			this->ptStart.y = -1;
+		}
+		break;
+
+	case VK_DELETE:
+
+		if(this->label == 0)
+		{
+			this->label = new Label(this->paper->Detach());
+		}
+
+		if(this->column < this->label->GetLength()) 
+		{
+			this->column = this->label->Erase(this->label->GetCurrent(), 1);
+		}
+		else if(this->row < this->paper->GetLength())
+		{
+			if(this->label->GetLength() > 0)
 			{
-				// 3.1.1. 라벨을 붙이다
-				this->paper->Attach(*(this->label));
-				// 3.1.2. 라벨을 삭제하다
-				delete label; label = 0;
+				char *buffer = this->label->Copy();
+				this->paper->MoveDown();
+				delete this->label;
+				this->label = new Label(this->paper->Detach());
+				this->label->MoveHome();
+
+				this->column = this->label->Write(buffer);
+				delete buffer;
 			}
-			// 3.2. 다음 줄로 이동하다 
-			this->paper->MoveDown();
-			// 3.3. 줄 증가
-			this->row++;
-			// 3.3. x번째 칸으로 이동하다
-			this->column = this->paper->GetCurrent()->Move(this->column);
+			else 
+			{
+				this->paper->MoveDown();
+				delete this->label;
+				this->label = new Label(this->paper->Detach());
+				this->column = this->label->MoveHome();
+			}
 		}
 		break;
 	}
 
-	Invalidate(); // 클라이언트 영역을 무효화하다
+	Invalidate(); 
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+void CMainFrame::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	switch(nChar)
+	{
+	case VK_SHIFT:
+		this->toolbox->ShiftUp();
+		break;
+	case VK_CONTROL:
+		this->toolbox->ControlUp();
+		break;
+	}
+	CWnd::OnKeyUp(nChar, nRepCnt, nFlags);
 }
