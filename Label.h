@@ -23,6 +23,7 @@ public:
 
 	int Write(char ch);
 	int Write(char* pstr);
+	int Store(char* pstr);
 	int Erase(int index, int count);
 
 	int MoveLeft();
